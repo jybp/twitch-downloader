@@ -33,7 +33,6 @@ type Alternative struct {
 	// Optional
 	Autoselect bool
 	Default    bool
-	URI        string
 }
 
 // Variant specifies a Variant Stream.

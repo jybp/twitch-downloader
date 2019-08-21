@@ -44,7 +44,7 @@ func (c *Client) vodToken(ctx context.Context, id string) (token, error) {
 	defer resp.Body.Close()
 	if s := resp.StatusCode; s < 200 || s >= 300 {
 		b, _ := ioutil.ReadAll(resp.Body)
-		return token{}, errors.Errorf("%d\n%s\n%s", resp.StatusCode, u, string(b))
+		return token{}, errors.Errorf("%d\n%s\n%s", s, u, string(b))
 	}
 	var t token
 	return t, errors.WithStack(json.NewDecoder(resp.Body).Decode(&t))
@@ -56,6 +56,7 @@ func (c *Client) VODM3U8(ctx context.Context, id string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+
 	u := fmt.Sprintf("%svod/%s?nauth=%s&nauthsig=%s&allow_audio_only=true&allow_source=true",
 		c.usherAPIURL, id, tok.Token, tok.Sig)
 	resp, err := c.client.Get(u)
@@ -65,7 +66,7 @@ func (c *Client) VODM3U8(ctx context.Context, id string) ([]byte, error) {
 	defer resp.Body.Close()
 	if s := resp.StatusCode; s < 200 || s >= 300 {
 		b, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("%d\n%s\n%s", resp.StatusCode, u, string(b))
+		return nil, errors.Errorf("%d\n%s\n%s", s, u, string(b))
 	}
 	return ioutil.ReadAll(resp.Body)
 }
