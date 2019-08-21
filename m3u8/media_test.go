@@ -21,9 +21,9 @@ func TestMedia(t *testing.T) {
 #EXTINF:11.5,
 0.ts
 #EXTINF:13
-1.ts
+http://custom.com/720p30/1.ts
 #EXT-X-ENDLIST`)
-	playlist, err := m3u8.Media(bytes.NewReader(b))
+	playlist, err := m3u8.Media(bytes.NewReader(b), "http://example.com/720p30/index-dvr.m3u8")
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
@@ -39,9 +39,9 @@ func TestMedia(t *testing.T) {
 
 	assert.Equal(t, time.Second*11+time.Millisecond*500, playlist.Segments[0].Duration)
 	assert.Equal(t, 2, playlist.Segments[0].Number)
-	assert.Equal(t, "0.ts", playlist.Segments[0].URL)
+	assert.Equal(t, "http://example.com/720p30/0.ts", playlist.Segments[0].URL)
 
 	assert.Equal(t, time.Second*13, playlist.Segments[1].Duration)
 	assert.Equal(t, 3, playlist.Segments[1].Number)
-	assert.Equal(t, "1.ts", playlist.Segments[1].URL)
+	assert.Equal(t, "http://custom.com/720p30/1.ts", playlist.Segments[1].URL)
 }

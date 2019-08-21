@@ -3,6 +3,8 @@ package m3u8
 import (
 	"bufio"
 	"io"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -32,7 +34,18 @@ type MediaPlaylist struct {
 }
 
 // Media parses a Media Playlist.
-func Media(r io.Reader) (MediaPlaylist, error) {
+// URL is an optional argument that matches the Variant URL inside the Master Playlist.
+// It is used to construct full URLs if the URLs inside Media Segments are relative.
+func Media(r io.Reader, URL string) (MediaPlaylist, error) {
+	var baseURL *url.URL
+	if len(URL) > 0 {
+		var err error
+		baseURL, err = url.Parse(strings.TrimRight(URL, path.Base(URL)))
+		if err != nil {
+			return MediaPlaylist{}, errors.WithStack(err)
+		}
+	}
+
 	scanner := bufio.NewScanner(r)
 
 	if !scanner.Scan() {
@@ -80,7 +93,6 @@ func Media(r io.Reader) (MediaPlaylist, error) {
 			if firstComma == -1 {
 				firstComma = len(line)
 			}
-			print(line, firstComma)
 			d, err := strconv.ParseFloat(line[8:firstComma], 64)
 			if err != nil {
 				return playlist, errors.WithStack(err)
@@ -91,6 +103,18 @@ func Media(r io.Reader) (MediaPlaylist, error) {
 				return playlist, errors.WithStack(io.ErrUnexpectedEOF)
 			}
 			segment.URL = scanner.Text()
+			if baseURL != nil {
+				segmentURL, err := url.Parse(segment.URL)
+				if err != nil {
+					return playlist, errors.WithStack(err)
+				}
+				if !segmentURL.IsAbs() {
+					bak := baseURL.Path
+					baseURL.Path = path.Join(baseURL.Path, segment.URL)
+					segment.URL = baseURL.String()
+					baseURL.Path = bak
+				}
+			}
 
 			playlist.Segments = append(playlist.Segments, segment)
 			continue
