@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -28,14 +29,12 @@ var (
 
 func init() {
 	log.SetFlags(0)
-	log.SetOutput(os.Stderr)
 
 	flag.StringVar(&clientID, "client-id", "", "Use a specific twitch.tv API client ID. Usage is optional.")
 	flag.BoolVar(&info, "i", false, "Print available qualities.")
 	flag.StringVar(&output, "o", "", `Path where the VOD will be downloaded. Usage is optional.
-Specifying a filename is optional. 
-Must not be present with the -info flag.`)
-	flag.StringVar(&quality, "q", "", "Quality of the VOD to download. Must not be present with the -info flag.")
+Must not be present with the -i flag.`)
+	flag.StringVar(&quality, "q", "", "Quality of the VOD to download. Must not be present with the -i flag.")
 	flag.StringVar(&vodID, "id", "", `The ID of the VOD to download.
 Can be inferred from the URL:
 https://www.twitch.tv/videos/123 is the VOD with ID "123".`)
@@ -67,7 +66,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Retrieving qualities for VOD %s failed: %v", vodID, err)
 		}
-		log.Printf("%s\n%s\n", vod.Title, strings.Join(qualities, "\n"))
+		fmt.Printf("%s\n%s\n", vod.Title, strings.Join(qualities, "\n"))
 		return
 	}
 
@@ -91,7 +90,7 @@ func main() {
 		log.Fatalf("Cannot create file %s: %v", output, err)
 	}
 
-	log.Printf("Downloading to: %s\n", f.Name())
+	fmt.Printf("Downloading: %s\n", f.Name())
 
 	if _, err := io.Copy(f, &reader{r: download}); err != nil {
 		log.Fatalf("Writing to file %s failed: %v", output, err)
@@ -99,29 +98,28 @@ func main() {
 	if err := f.Close(); err != nil {
 		log.Fatalf("Closing file %s failed: %v", output, err)
 	}
-
-	fmt.Fprintf(os.Stderr, "\rSuccessfully downloaded to: %s\n", f.Name())
+	fmt.Printf("\rDone%-25s\n", " ")
 }
 
-// reader prints download progress every second.
+// reader prints the download progress every second.
 type reader struct {
-	r io.Reader
+	r *twitchdl.Merger
 
-	s time.Time
 	l time.Time
 	n int
 	t int
 }
 
 func (r *reader) Read(p []byte) (n int, err error) {
-	if r.t == 0 {
-		r.s = time.Now()
-	}
 	n, err = r.r.Read(p)
 	r.n += n
 	r.t += n
 	if time.Now().Sub(r.l) > time.Second {
-		fmt.Fprintf(os.Stderr, "\r%s/s (%s)", r.bps(), r.btos(int64(r.t)))
+		progress := float64(r.r.Current()) * 100 / float64(r.r.Chunks())
+		fmt.Printf("\r%-12s %-10s %-2d%%",
+			r.btos(r.bps())+"/s",
+			r.btos(int64(r.t)),
+			int(math.Round(progress)))
 		r.l = time.Now()
 		r.n = 0
 	}
@@ -141,8 +139,9 @@ func (*reader) btos(b int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-func (r *reader) bps() string {
+// bitrate
+func (r *reader) bps() int64 {
 	d := time.Now().Sub(r.l)
 	bps := int64(r.n) * int64(time.Second) / int64(d)
-	return r.btos(bps)
+	return bps
 }

@@ -34,8 +34,7 @@ func Qualities(ctx context.Context, client *http.Client, clientID, vodID string)
 // Download sets up the download of the VOD "vodId" with quality "quality"
 // using the provided http.Client.
 // The download is actually perfomed when the returned io.Reader is being read.
-// "size" is an rough estimate of the expected file size
-func Download(ctx context.Context, client *http.Client, clientID, vodID, quality string) (r io.Reader, err error) {
+func Download(ctx context.Context, client *http.Client, clientID, vodID, quality string) (r *Merger, err error) {
 	api := twitch.New(client, clientID)
 	m3u8raw, err := api.M3U8(ctx, vodID)
 	if err != nil {
@@ -81,10 +80,10 @@ L:
 		downloadFns = append(downloadFns, prepare(client, req))
 	}
 
-	return &merger{downloads: downloadFns}, nil
+	return &Merger{downloads: downloadFns}, nil
 }
 
-// dlFunc describes a func that peform an HTTP request and returns the response.Body
+// downloadFunc describes a func that peform an HTTP request and returns the response.Body
 type downloadFunc func() (io.ReadCloser, error)
 
 func prepare(client *http.Client, req *http.Request) downloadFunc {
@@ -100,8 +99,8 @@ func prepare(client *http.Client, req *http.Request) downloadFunc {
 	}
 }
 
-// merger merges the "downloads" into a single io.Reader.
-type merger struct {
+// Merger merges the "downloads" into a single io.Reader.
+type Merger struct {
 	downloads []downloadFunc
 
 	index   int
@@ -109,9 +108,10 @@ type merger struct {
 	err     error
 }
 
-func (r *merger) next() error {
+func (r *Merger) next() error {
 	if r.index >= len(r.downloads) {
 		r.current = nil
+		r.index++
 		return nil
 	}
 	var err error
@@ -120,7 +120,8 @@ func (r *merger) next() error {
 	return err
 }
 
-func (r *merger) Read(p []byte) (int, error) {
+// Read allows Merger to implement io.Reader.
+func (r *Merger) Read(p []byte) (int, error) {
 	for {
 		if r.err != nil {
 			return 0, r.err
@@ -140,4 +141,14 @@ func (r *merger) Read(p []byte) (int, error) {
 			return 0, io.EOF
 		}
 	}
+}
+
+// Chunks returns the number of chunks.
+func (r *Merger) Chunks() int {
+	return len(r.downloads)
+}
+
+// Current returns the number of chunks already processed.
+func (r *Merger) Current() int {
+	return r.index
 }
