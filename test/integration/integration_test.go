@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jybp/twitch-downloader/twitch"
+
 	twitchdl "github.com/jybp/twitch-downloader"
 )
 
@@ -48,6 +50,20 @@ func client(t *testing.T) *http.Client {
 	return &http.Client{Transport: transport{t}}
 }
 
+func TestVOD(t *testing.T) {
+	if skip {
+		t.SkipNow()
+	}
+	api := twitch.New(client(t), clientID)
+	vod, err := api.VOD(context.Background(), vodID)
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	if testing.Verbose() {
+		t.Logf("%v", vod)
+	}
+}
+
 func TestQualities(t *testing.T) {
 	if skip {
 		t.SkipNow()
@@ -57,7 +73,7 @@ func TestQualities(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	if testing.Verbose() {
-		t.Logf("%s", qualities)
+		t.Logf("%v", qualities)
 	}
 	if len(qualities) == 0 {
 		t.Fatal("0 qualities")

@@ -42,7 +42,7 @@ func TestVODM3U8(t *testing.T) {
 		fmt.Fprintf(w, "#EXTM3U\n")
 	})
 
-	m3u, err := client.VODM3U8(context.Background(), "123")
+	m3u, err := client.M3U8(context.Background(), "123")
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

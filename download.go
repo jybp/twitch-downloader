@@ -14,7 +14,7 @@ import (
 // Qualities return the qualities available for the VOD "vodID".
 func Qualities(ctx context.Context, client *http.Client, clientID, vodID string) ([]string, error) {
 	api := twitch.New(client, clientID)
-	m3u8raw, err := api.VODM3U8(ctx, vodID)
+	m3u8raw, err := api.M3U8(ctx, vodID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,9 +34,10 @@ func Qualities(ctx context.Context, client *http.Client, clientID, vodID string)
 // Download sets up the download of the VOD "vodId" with quality "quality"
 // using the provided http.Client.
 // The download is actually perfomed when the returned io.Reader is being read.
-func Download(ctx context.Context, client *http.Client, clientID, vodID, quality string) (io.Reader, error) {
+// "size" is an rough estimate of the expected file size
+func Download(ctx context.Context, client *http.Client, clientID, vodID, quality string) (r io.Reader, err error) {
 	api := twitch.New(client, clientID)
-	m3u8raw, err := api.VODM3U8(ctx, vodID)
+	m3u8raw, err := api.M3U8(ctx, vodID)
 	if err != nil {
 		return nil, err
 	}
@@ -45,28 +46,28 @@ func Download(ctx context.Context, client *http.Client, clientID, vodID, quality
 		return nil, err
 	}
 
-	var mediaURL string
+	var variant m3u8.Variant
 L:
-	for _, variant := range master.Variants {
-		for _, alt := range variant.Alternatives {
+	for _, v := range master.Variants {
+		for _, alt := range v.Alternatives {
 			if alt.Name != quality {
 				continue
 			}
-			mediaURL = variant.URL
+			variant = v
 			break L
 		}
 	}
 
-	if len(mediaURL) == 0 {
+	if len(variant.URL) == 0 {
 		return nil, errors.Errorf("quality %s not found", quality)
 	}
 
-	mediaResp, err := client.Get(mediaURL)
+	mediaResp, err := client.Get(variant.URL)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	defer mediaResp.Body.Close()
-	media, err := m3u8.Media(mediaResp.Body, mediaURL)
+	media, err := m3u8.Media(mediaResp.Body, variant.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -96,5 +97,47 @@ func prepare(client *http.Client, req *http.Request) downloadFunc {
 			return nil, errors.Errorf("%d: %s", s, req.URL)
 		}
 		return resp.Body, nil
+	}
+}
+
+// merger merges the "downloads" into a single io.Reader.
+type merger struct {
+	downloads []downloadFunc
+
+	index   int
+	current io.ReadCloser
+	err     error
+}
+
+func (r *merger) next() error {
+	if r.index >= len(r.downloads) {
+		r.current = nil
+		return nil
+	}
+	var err error
+	r.current, err = r.downloads[r.index]()
+	r.index++
+	return err
+}
+
+func (r *merger) Read(p []byte) (int, error) {
+	for {
+		if r.err != nil {
+			return 0, r.err
+		}
+		if r.current != nil {
+			n, err := r.current.Read(p)
+			if err == io.EOF {
+				err = r.current.Close()
+				r.current = nil
+			}
+			return n, errors.WithStack(err)
+		}
+		if err := r.next(); err != nil {
+			return 0, err
+		}
+		if r.current == nil {
+			return 0, io.EOF
+		}
 	}
 }
