@@ -6,10 +6,29 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 )
+
+// ID extract the ID from a VOD url.
+func ID(URL string) (string, error) {
+	u, err := url.Parse(URL)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	if u.Hostname() != "www.twitch.tv" {
+		return "", errors.New("URL host is not twitch.tv:" + u.Hostname())
+	}
+	if !strings.HasPrefix(u.Path, "/videos/") {
+		return "", errors.New("URL path does not contain /videos/")
+	}
+	_, id := path.Split(u.Path)
+	return id, nil
+}
 
 // https://dev.twitch.tv/docs/api/reference/
 // https://github.com/videolan/vlc/blob/0b018b348f47cda82863809ab0385cb993c8aa33/share/lua/playlist/twitch.lua#L81

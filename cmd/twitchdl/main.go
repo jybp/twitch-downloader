@@ -22,22 +22,16 @@ import (
 var defaultClientID string
 
 // Flags
-var (
-	clientID, vodID, quality, output string
-	info                             bool
-)
+var clientID, vodID, quality, output string
 
 func init() {
 	log.SetFlags(0)
 
 	flag.StringVar(&clientID, "client-id", "", "Use a specific twitch.tv API client ID. Usage is optional.")
-	flag.BoolVar(&info, "i", false, "Print available qualities.")
-	flag.StringVar(&output, "o", "", `Path where the VOD will be downloaded. Usage is optional.
-Must not be present with the -i flag.`)
-	flag.StringVar(&quality, "q", "", "Quality of the VOD to download. Must not be present with the -i flag.")
-	flag.StringVar(&vodID, "id", "", `The ID of the VOD to download.
-Can be inferred from the URL:
-https://www.twitch.tv/videos/123 is the VOD with ID "123".`)
+	flag.StringVar(&output, "o", "", `Path where the VOD will be downloaded. Usage is optional.`)
+	flag.StringVar(&quality, "q", "", "Quality of the VOD to download. Omit this flag to print the available qualities.")
+	flag.StringVar(&vodID, "vod", "", `The ID or absolute URL of the twitch VOD to download.
+https://www.twitch.tv/videos/12345 is the VOD with ID "12345".`)
 	flag.Parse()
 }
 
@@ -46,7 +40,7 @@ func main() {
 		panic("no default client id specified")
 	}
 
-	if len(vodID) == 0 || (len(quality) > 0 == info) {
+	if len(vodID) == 0 {
 		flag.PrintDefaults()
 		return
 	}
@@ -55,13 +49,18 @@ func main() {
 		clientID = defaultClientID
 	}
 
+	id, err := twitch.ID(vodID)
+	if err == nil {
+		vodID = id
+	}
+
 	api := twitch.New(http.DefaultClient, clientID)
 	vod, err := api.VOD(context.Background(), vodID)
 	if err != nil {
 		log.Fatalf("Retrieving video informations for VOD %s failed: %v", vodID, err)
 	}
 
-	if info {
+	if len(quality) == 0 {
 		qualities, err := twitchdl.Qualities(context.Background(), http.DefaultClient, clientID, vodID)
 		if err != nil {
 			log.Fatalf("Retrieving qualities for VOD %s failed: %v", vodID, err)
@@ -105,28 +104,28 @@ func main() {
 type reader struct {
 	r *twitchdl.Merger
 
-	l time.Time
-	n int
-	t int
+	from time.Time
+	n    uint64
+	t    uint64
 }
 
 func (r *reader) Read(p []byte) (n int, err error) {
 	n, err = r.r.Read(p)
-	r.n += n
-	r.t += n
-	if time.Now().Sub(r.l) > time.Second {
+	r.n += uint64(n)
+	r.t += uint64(n)
+	if time.Now().Sub(r.from) > time.Second {
 		progress := float64(r.r.Current()) * 100 / float64(r.r.Chunks())
 		fmt.Printf("\r%-12s %-10s %-2d%%",
-			r.btos(r.bps())+"/s",
-			r.btos(int64(r.t)),
+			r.btos(r.bitrate())+"/s",
+			r.btos(r.t),
 			int(math.Round(progress)))
-		r.l = time.Now()
+		r.from = time.Now()
 		r.n = 0
 	}
 	return
 }
 
-func (*reader) btos(b int64) string {
+func (*reader) btos(b uint64) string {
 	const u = 1024
 	if b < u {
 		return fmt.Sprintf("%d B", b)
@@ -139,9 +138,6 @@ func (*reader) btos(b int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-// bitrate
-func (r *reader) bps() int64 {
-	d := time.Now().Sub(r.l)
-	bps := int64(r.n) * int64(time.Second) / int64(d)
-	return bps
+func (r *reader) bitrate() uint64 {
+	return uint64(r.n) * uint64(time.Second) / uint64(time.Now().Sub(r.from))
 }
