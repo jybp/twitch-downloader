@@ -109,10 +109,7 @@ func Media(r io.Reader, URL string) (MediaPlaylist, error) {
 					return playlist, errors.WithStack(err)
 				}
 				if !segmentURL.IsAbs() {
-					bak := baseURL.Path
-					baseURL.Path = path.Join(baseURL.Path, segment.URL)
-					segment.URL = baseURL.String()
-					baseURL.Path = bak
+					segment.URL = baseURL.ResolveReference(segmentURL).String()
 				}
 			}
 
