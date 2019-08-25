@@ -74,12 +74,12 @@ func main() {
 		log.Fatalf("Retrieving stream for VOD %s failed: %v", vodID, err)
 	}
 
-	ext := "mp4"
-	if strings.Contains(strings.ToLower(quality), "audio") {
-		ext = "mp4a"
-	}
 	path, filename := filepath.Split(output)
 	if len(filename) == 0 {
+		ext := "mp4"
+		if strings.Contains(strings.ToLower(quality), "audio") {
+			ext = "mp4a"
+		}
 		filename = fmt.Sprintf("%s (%s).%s", vod.Title, quality, ext)
 	}
 	output = filepath.Join(path, filename)
