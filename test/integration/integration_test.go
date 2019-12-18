@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/jybp/twitch-downloader/twitch"
@@ -22,17 +23,21 @@ var (
 	nocleanup bool
 
 	skip bool
+
+	once sync.Once
 )
 
-func init() {
-	flag.StringVar(&clientID, "clientID", "", "clientID")
-	flag.StringVar(&vodID, "vodID", "", "vodID")
-	flag.StringVar(&quality, "quality", "", "quality")
-	flag.BoolVar(&nocleanup, "nocleanup", false, "do not clean up tmp file")
-	flag.Parse()
-	if len(clientID) == 0 || len(vodID) == 0 || len(quality) == 0 {
-		skip = true
-	}
+func parseFlags() {
+	once.Do(func() {
+		flag.StringVar(&clientID, "clientID", "", "clientID")
+		flag.StringVar(&vodID, "vodID", "", "vodID")
+		flag.StringVar(&quality, "quality", "", "quality")
+		flag.BoolVar(&nocleanup, "nocleanup", false, "do not clean up tmp file")
+		flag.Parse()
+		if len(clientID) == 0 || len(vodID) == 0 || len(quality) == 0 {
+			skip = true
+		}
+	})
 }
 
 type transport struct {
@@ -51,6 +56,7 @@ func client(t *testing.T) *http.Client {
 }
 
 func TestVOD(t *testing.T) {
+	parseFlags()
 	if skip {
 		t.SkipNow()
 	}
@@ -65,6 +71,7 @@ func TestVOD(t *testing.T) {
 }
 
 func TestQualities(t *testing.T) {
+	parseFlags()
 	if skip {
 		t.SkipNow()
 	}
@@ -82,6 +89,7 @@ func TestQualities(t *testing.T) {
 
 // The test can take a long time to complete. Make sure to use the -timeout flag.
 func TestDownload(t *testing.T) {
+	parseFlags()
 	if skip {
 		t.SkipNow()
 	}
