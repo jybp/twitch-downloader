@@ -1,0 +1,30 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+- main: ./cmd/twitchdl/main.go
+  binary: twitchdl
+  goos:
+    - linux
+    - darwin
+    - windows
+  env:
+    - CGO_ENABLED=0
+  ldflags: -X main.defaultClientID=kimne78kx3ncx6brgo4mv6wki5h1ko
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+    386: i386
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'

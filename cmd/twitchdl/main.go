@@ -36,7 +36,7 @@ https://www.twitch.tv/videos/12345 is the VOD with ID "12345".`)
 }
 
 func main() {
-	if len(clientID) >= 0 {
+	if len(clientID) > 0 {
 		defaultClientID = clientID
 	}
 
@@ -54,14 +54,14 @@ func main() {
 		vodID = id
 	}
 
-	api := twitch.New(http.DefaultClient, clientID)
+	api := twitch.New(http.DefaultClient, defaultClientID)
 	vod, err := api.VOD(context.Background(), vodID)
 	if err != nil {
 		log.Fatalf("Retrieving video informations for VOD %s failed: %v", vodID, err)
 	}
 
 	if len(quality) == 0 {
-		qualities, err := twitchdl.Qualities(context.Background(), http.DefaultClient, clientID, vodID)
+		qualities, err := twitchdl.Qualities(context.Background(), http.DefaultClient, defaultClientID, vodID)
 		if err != nil {
 			log.Fatalf("Retrieving qualities for VOD %s failed: %v", vodID, err)
 		}
@@ -69,7 +69,7 @@ func main() {
 		return
 	}
 
-	download, err := twitchdl.Download(context.Background(), http.DefaultClient, clientID, vodID, quality)
+	download, err := twitchdl.Download(context.Background(), http.DefaultClient, defaultClientID, vodID, quality)
 	if err != nil {
 		log.Fatalf("Retrieving stream for VOD %s failed: %v", vodID, err)
 	}
