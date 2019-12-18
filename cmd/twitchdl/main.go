@@ -36,6 +36,10 @@ https://www.twitch.tv/videos/12345 is the VOD with ID "12345".`)
 }
 
 func main() {
+	if len(clientID) >= 0 {
+		defaultClientID = clientID
+	}
+
 	if len(defaultClientID) == 0 {
 		panic("no default client id specified")
 	}
@@ -43,10 +47,6 @@ func main() {
 	if len(vodID) == 0 {
 		flag.PrintDefaults()
 		return
-	}
-
-	if len(clientID) == 0 {
-		clientID = defaultClientID
 	}
 
 	id, err := twitch.ID(vodID)
