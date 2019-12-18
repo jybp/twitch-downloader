@@ -13,7 +13,8 @@ https://github.com/jybp/twitch-downloader/releases
 
 ## Flags
 
-`-client-id` Use a specific twitch.tv API client ID. Usage is optional.
+`-client-id` Use a specific twitch.tv API client ID. Usage is optional. 
+Note: Using any other client id other than twitch own client id might not work.
 
 `-o` Path where the VOD will be downloaded. Usage is optional.
 
@@ -26,4 +27,4 @@ https://github.com/jybp/twitch-downloader/releases
 1. Get a twitch Client ID by registering an application https://dev.twitch.tv/console/apps/create
 2. Install the latest version of Go https://golang.org/
 3. Clone the git repository
-4. Set the current directory to `cmd/twitchdl` and run `go build -ldflags "-X main.defaultClientID=YourTwitchClientID"`
+4. Set the current directory to `cmd/twitchdl` and run `go build -ldflags "-X main.defaultClientID=TwitchClientID"`
