@@ -23,15 +23,17 @@ var defaultClientID string
 
 // Flags
 var clientID, vodID, quality, output string
+var start, end time.Duration
 
 func init() {
 	log.SetFlags(0)
 
-	flag.StringVar(&clientID, "client-id", "", "Use a specific twitch.tv API client ID. Usage is optional.")
-	flag.StringVar(&output, "o", "", `Path where the VOD will be downloaded. Usage is optional.`)
+	flag.StringVar(&vodID, "vod", "", `The ID or absolute URL of the twitch VOD to download. https://www.twitch.tv/videos/12345 is the VOD with ID "12345".`)
 	flag.StringVar(&quality, "q", "", "Quality of the VOD to download. Omit this flag to print the available qualities.")
-	flag.StringVar(&vodID, "vod", "", `The ID or absolute URL of the twitch VOD to download.
-https://www.twitch.tv/videos/12345 is the VOD with ID "12345".`)
+	flag.StringVar(&output, "o", "", `Path where the VOD will be downloaded. (optional)`)
+	flag.DurationVar(&start, "start", time.Duration(0), "Specify \"start\" to download a subset of the VOD. Example: 1h23m45s (optional)")
+	flag.DurationVar(&end, "end", time.Duration(0), "Specify \"end\" to download a subset of the VOD. Example: 1h34m56s (optional)")
+	flag.StringVar(&clientID, "client-id", "", "Use a specific twitch.tv API client ID. (optional)")
 	flag.Parse()
 }
 
@@ -69,7 +71,7 @@ func main() {
 		return
 	}
 
-	download, err := twitchdl.Download(context.Background(), http.DefaultClient, defaultClientID, vodID, quality)
+	download, err := twitchdl.Download(context.Background(), http.DefaultClient, defaultClientID, vodID, quality, start, end)
 	if err != nil {
 		log.Fatalf("Retrieving stream for VOD %s failed: %v", vodID, err)
 	}
