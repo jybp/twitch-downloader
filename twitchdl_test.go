@@ -11,7 +11,6 @@ import (
 )
 
 func TestSliceSegments(t *testing.T) {
-
 	segments := []m3u8.MediaSegment{
 		{Number: 0, Duration: time.Second * 5},
 		{Number: 1, Duration: time.Second * 5},

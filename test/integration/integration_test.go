@@ -66,7 +66,7 @@ func TestVOD(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	if testing.Verbose() {
-		t.Logf("%v", vod)
+		t.Logf("%v", vod.Title)
 	}
 }
 
@@ -94,7 +94,7 @@ func TestDownload(t *testing.T) {
 		t.SkipNow()
 	}
 
-	reader, err := twitchdl.Download(context.Background(), client(t), clientID, vodID, quality)
+	reader, err := twitchdl.Download(context.Background(), client(t), clientID, vodID, quality, 0, 0)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

@@ -3,7 +3,6 @@ package twitchdl
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -14,32 +13,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Qualities return the qualities available for the VOD "vodID".
-func Qualities(ctx context.Context, client *http.Client, clientID, vodID string) ([]string, error) {
+func downloadVOD(ctx context.Context, client *http.Client, clientID, id, quality string, start, end time.Duration) (io.ReadCloser, error) {
 	api := twitch.New(client, clientID)
-	m3u8raw, err := api.M3U8(ctx, vodID)
-	if err != nil {
-		return nil, err
-	}
-	master, err := m3u8.Master(bytes.NewReader(m3u8raw))
-	if err != nil {
-		return nil, err
-	}
-	var qualities []string
-	for _, variant := range master.Variants {
-		for _, alt := range variant.Alternatives {
-			qualities = append(qualities, alt.Name)
-		}
-	}
-	return qualities, nil
-}
-
-// Download sets up the download of the VOD "vodId" with quality "quality"
-// using the provided http.Client.
-// The download is actually perfomed when the returned io.Reader is being read.
-func Download(ctx context.Context, client *http.Client, clientID, vodID, quality string, start, end time.Duration) (r *Merger, err error) {
-	api := twitch.New(client, clientID)
-	m3u8raw, err := api.M3U8(ctx, vodID)
+	m3u8raw, err := api.M3U8(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -84,10 +60,11 @@ L:
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+		req = req.WithContext(ctx)
 		downloadFns = append(downloadFns, prepare(client, req))
 	}
 
-	return &Merger{downloads: downloadFns}, nil
+	return &merger{downloads: downloadFns}, nil
 }
 
 func sliceSegments(segments []m3u8.MediaSegment, start, end time.Duration) ([]m3u8.MediaSegment, error) {
@@ -122,7 +99,7 @@ func sliceSegments(segments []m3u8.MediaSegment, start, end time.Duration) ([]m3
 		for _, segment := range segments {
 			dur += segment.Duration
 		}
-		return nil, fmt.Errorf("Timestamps are not a subset of the video (video duration is %v)", dur)
+		return nil, errors.Errorf("Timestamps are not a subset of the video (video duration is %v)", dur)
 	}
 	return slice, nil
 }
@@ -143,8 +120,8 @@ func prepare(client *http.Client, req *http.Request) downloadFunc {
 	}
 }
 
-// Merger merges the "downloads" into a single io.Reader.
-type Merger struct {
+// merger merges the several downloadFunc into a single io.Reader.
+type merger struct {
 	downloads []downloadFunc
 
 	index   int
@@ -152,7 +129,7 @@ type Merger struct {
 	err     error
 }
 
-func (r *Merger) next() error {
+func (r *merger) next() error {
 	if r.index >= len(r.downloads) {
 		r.current = nil
 		r.index++
@@ -164,8 +141,8 @@ func (r *Merger) next() error {
 	return err
 }
 
-// Read allows Merger to implement io.Reader.
-func (r *Merger) Read(p []byte) (int, error) {
+// Read allows merger to implement io.Reader.
+func (r *merger) Read(p []byte) (int, error) {
 	for {
 		if r.err != nil {
 			return 0, r.err
@@ -187,12 +164,16 @@ func (r *Merger) Read(p []byte) (int, error) {
 	}
 }
 
+func (r *merger) Close() error {
+	return nil
+}
+
 // Chunks returns the number of chunks.
-func (r *Merger) Chunks() int {
+func (r *merger) Chunks() int {
 	return len(r.downloads)
 }
 
 // Current returns the number of chunks already processed.
-func (r *Merger) Current() int {
+func (r *merger) Current() int {
 	return r.index
 }
