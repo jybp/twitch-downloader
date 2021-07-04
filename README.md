@@ -1,14 +1,14 @@
 # twitch-downloader
 
-Easily download twitch VODs on Windows, MacOs and Linux with no dependencies whatsoever.
+Easily download twitch VODs and Clips.
 
 ## Usage
 
-![Usage](doc/usage.gif?raw=true)
+![Uage](doc/usage.gif?raw=true)
 
 ## Download
 
-You can download the latest release here:
+You can download the latest release for Windows, Macos and Linux here:
 https://github.com/jybp/twitch-downloader/releases
 
 ## Flags
@@ -25,7 +25,6 @@ https://github.com/jybp/twitch-downloader/releases
 
 ## Build from source
 
-1. Get a twitch Client ID by registering an application https://dev.twitch.tv/console/apps/create
-2. Install the latest version of Go https://golang.org/
-3. Clone the git repository
-4. Set the current directory to `cmd/twitchdl` and run `go build -ldflags "-X main.defaultClientID=TwitchClientID"`
+1. Install the latest version of Go https://golang.org/
+2. Clone the git repository
+3. Set the current directory to `cmd/twitchdl` and run `go build -ldflags "-X main.defaultClientID=TwitchClientID"`
