@@ -13,25 +13,25 @@ import (
 
 const clipQualityFramerateFormat = "%sp%d"
 
-func downloadClip(ctx context.Context, client *http.Client, clientID, id, targetQuality string) (io.ReadCloser, error) {
+func downloadClip(ctx context.Context, client *http.Client, clientID, id, quality string) (io.ReadCloser, error) {
 	api := twitch.New(client, clientID)
 	clip, err := api.ClipVideo(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	var dlURL string
-	for _, quality := range clip.Qualities {
-		str := fmt.Sprintf(clipQualityFramerateFormat, quality.Quality, quality.FrameRate)
-		if str != targetQuality {
+	for _, q := range clip.Qualities {
+		str := fmt.Sprintf(clipQualityFramerateFormat, q.Quality, q.FrameRate)
+		if str != quality {
 			continue
 		}
 		dlURL = fmt.Sprintf("%s?sig=%s&token=%s",
-			quality.SourceURL,
+			q.SourceURL,
 			url.QueryEscape(clip.Token.Signature),
 			url.QueryEscape(clip.Token.Value))
 	}
 	if len(dlURL) == 0 {
-		return nil, errors.Errorf("Quality %s not found", targetQuality)
+		return nil, errors.Errorf("Quality %s not found", quality)
 	}
 	req, err := http.NewRequest(http.MethodGet, dlURL, nil)
 	if err != nil {

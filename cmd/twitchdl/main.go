@@ -29,7 +29,7 @@ func init() {
 	log.SetFlags(0)
 
 	flag.StringVar(&url, "url", "", `The URL of the twitch VOD or Clip to download.`)
-	flag.StringVar(&quality, "q", "", "Quality of the video to download. Omit this flag to print the available qualities.")
+	flag.StringVar(&quality, "q", "", "Quality of the video to download. Omit this flag to print the available qualities.\nUse \"best\" to automatically select the highest quality.")
 	flag.StringVar(&output, "o", "", `Path where the video will be downloaded. (optional)`)
 	flag.DurationVar(&start, "start", time.Duration(0), "Specify \"start\" to download a subset of the VOD. Example: 1h23m45s (optional)")
 	flag.DurationVar(&end, "end", time.Duration(0), "Specify \"end\" to download a subset of the VOD. Example: 1h34m56s (optional)")
@@ -74,6 +74,13 @@ func run() error {
 		}
 		fmt.Printf("%s\n%s\n", name, strings.Join(qualities, "\n"))
 		return nil
+	}
+	if quality == "best" {
+		qualities, err := twitchdl.Qualities(context.Background(), http.DefaultClient, defaultClientID, url)
+		if err != nil || len(qualities) == 0 {
+			return errors.Wrapf(err, "Retrieving qualities for URL %s failed", url)
+		}
+		quality = qualities[0]
 	}
 
 	download, err := twitchdl.Download(context.Background(), http.DefaultClient, defaultClientID, url, quality, start, end)

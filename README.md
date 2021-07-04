@@ -16,7 +16,7 @@ https://github.com/jybp/twitch-downloader/releases
 |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Description |
 | --- | --- |
 | `-url` | The URL of the twitch VOD or Clip to download. |
-| `-q` | Quality of the video to download. Omit this flag to print the available qualities. |
+| `-q` | Quality of the video to download. Omit this flag to print the available qualities.<br>Use "best" to automatically select the highest quality." |
 | `-o` | Path where the video will be downloaded. (optional)|
 | `-start` | Specify "start" to download a subset of the VOD. Example: 1h23m45s (optional) |
 | `-end` | Specify "end" to download a subset of the VOD. Example: 1h34m56s (optional) |
