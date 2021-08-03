@@ -35,21 +35,23 @@ L:
 			break L
 		}
 	}
-
 	if len(variant.URL) == 0 {
 		return nil, errors.Errorf("quality %s not found", quality)
 	}
+	return DownloadM3U8Media(ctx, client, variant.URL, quality, start, end)
+}
 
-	mediaResp, err := client.Get(variant.URL)
+func DownloadM3U8Media(ctx context.Context, client *http.Client, mediaURL string, quality string, start, end time.Duration) (io.ReadCloser, error) {
+	mediaResp, err := client.Get(mediaURL)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	defer mediaResp.Body.Close()
-	media, err := m3u8.Media(mediaResp.Body, variant.URL)
+
+	media, err := m3u8.Media(mediaResp.Body, mediaURL)
 	if err != nil {
 		return nil, err
 	}
-
 	var downloadFns []downloadFunc
 	segments, err := sliceSegments(media.Segments, start, end)
 	if err != nil {
@@ -130,14 +132,20 @@ type merger struct {
 }
 
 func (r *merger) next() error {
+	// TODO bypass err on chunk
+	var err error
+	// for {
 	if r.index >= len(r.downloads) {
 		r.current = nil
 		r.index++
 		return nil
 	}
-	var err error
 	r.current, err = r.downloads[r.index]()
+	// if err == nil {
+	// 	break
+	// }
 	r.index++
+	// }
 	return err
 }
 
@@ -153,7 +161,12 @@ func (r *merger) Read(p []byte) (int, error) {
 				err = r.current.Close()
 				r.current = nil
 			}
+
+			// TODO bypass err on chunk
+			// if err == nil {
 			return n, errors.WithStack(err)
+			// }
+
 		}
 		if err := r.next(); err != nil {
 			return 0, err
