@@ -99,10 +99,13 @@ func Media(r io.Reader, URL string) (MediaPlaylist, error) {
 			}
 			segment.Duration = time.Duration(d * float64(time.Second))
 
-			if !scanner.Scan() {
-				return playlist, errors.WithStack(io.ErrUnexpectedEOF)
+			for len(segment.URL) == 0 || strings.HasPrefix(segment.URL, "#") {
+				if !scanner.Scan() {
+					return playlist, errors.WithStack(io.ErrUnexpectedEOF)
+				}
+				segment.URL = scanner.Text()
 			}
-			segment.URL = scanner.Text()
+
 			if baseURL != nil {
 				segmentURL, err := url.Parse(segment.URL)
 				if err != nil {

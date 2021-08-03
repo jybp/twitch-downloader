@@ -19,6 +19,7 @@ func TestMedia(t *testing.T) {
 #EXT-X-TWITCH-ELAPSED-SECS:0.000
 #EXT-X-TWITCH-TOTAL-SECS:578.690
 #EXTINF:11.5,
+#EXT-X-BYTERANGE:2
 0.ts?query=val
 #EXTINF:13
 http://custom.com/720p30/1.ts?query=val
