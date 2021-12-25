@@ -75,7 +75,7 @@ func run() error {
 
 	path, filename := filepath.Split(output)
 	if len(filename) == 0 {
-		return errors.Wrapf(err, "No filename specified in %s", output)
+		return errors.Errorf("No filename specified in %s", output)
 	}
 	output = filepath.Join(path, filename)
 
