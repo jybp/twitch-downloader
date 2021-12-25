@@ -157,7 +157,7 @@ func (r *merger) Read(p []byte) (int, error) {
 		}
 		if r.current != nil {
 			n, err := r.current.Read(p)
-			if err == io.EOF {
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				err = r.current.Close()
 				r.current = nil
 			}
