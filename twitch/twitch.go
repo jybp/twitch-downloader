@@ -27,18 +27,17 @@ func ID(URL string) (string, VideoType, error) {
 	if err != nil {
 		return "", 0, errors.WithStack(err)
 	}
-	if u.Hostname() != "www.twitch.tv" {
+	if !strings.Contains(u.Hostname(), "twitch.tv") {
 		return "", 0, errors.Errorf("URL host for %s is not twitch.tv", URL)
 	}
 	if strings.HasPrefix(u.Path, "/videos/") {
 		_, id := path.Split(u.Path)
 		return id, TypeVOD, nil
 	}
-	if strings.Contains(u.Path, "/clip/") {
-		_, id := path.Split(u.Path)
-		return id, TypeClip, nil
+	if !strings.Contains(u.Hostname(), "clips.twitch.tv") {
+		return "", 0, errors.Errorf("URL host for %s is not twitch.tv", URL)
 	}
-	return "", 0, errors.New("Cannot extract VOD ID or clip slug from URL")
+	return u.Path, TypeClip, nil
 }
 
 // Client manages communication with the twitch API.
