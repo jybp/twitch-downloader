@@ -34,10 +34,11 @@ func ID(URL string) (string, VideoType, error) {
 		_, id := path.Split(u.Path)
 		return id, TypeVOD, nil
 	}
-	if !strings.Contains(u.Hostname(), "clips.twitch.tv") {
-		return "", 0, errors.Errorf("URL host for %s is not twitch.tv", URL)
+	if strings.Contains(u.Path, "/clip/") || strings.Contains(u.Hostname(), "clips.twitch.tv") {
+		_, id := path.Split(u.Path)
+		return id, TypeClip, nil
 	}
-	return u.Path, TypeClip, nil
+	return "", 0, errors.New("Cannot extract VOD ID or clip slug from URL")
 }
 
 // Client manages communication with the twitch API.

@@ -31,6 +31,11 @@ func TestID(t *testing.T) {
 			expectedType: twitch.TypeClip,
 		},
 		{
+			input:        "https://clips.twitch.tv/Slug123",
+			expectedID:   "Slug123",
+			expectedType: twitch.TypeClip,
+		},
+		{
 			input:       "https://www.twitch123.tv/videos/12345",
 			expectedErr: true,
 		},
