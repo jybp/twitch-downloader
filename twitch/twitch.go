@@ -51,7 +51,7 @@ type Client struct {
 
 // New returns a new twitch API client.
 func New(client *http.Client, clientID string) Client {
-	return Client{client, clientID, "https://gql.twitch.tv/gql", "http://usher.twitch.tv/"}
+	return Client{client, clientID, "https://gql.twitch.tv/gql", "http://usher.ttvnw.net"}
 }
 
 // Custom returns a new twitch API client with custom API endpoints
@@ -67,7 +67,7 @@ func (c *Client) vodToken(ctx context.Context, id string) (token, sig string, _ 
 		return "", "", errors.WithStack(err)
 	}
 	req = req.WithContext(ctx)
-	req.Header.Set("Client-Id", c.clientID)
+	req.Header.Set("Client-ID", c.clientID)
 	type payload struct {
 		Data struct {
 			VideoPlaybackAccessToken struct {
@@ -205,7 +205,7 @@ func (c *Client) M3U8(ctx context.Context, id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("%svod/%s?nauth=%s&nauthsig=%s&allow_audio_only=true&allow_source=true",
+	u := fmt.Sprintf("%s/vod/%s?nauth=%s&nauthsig=%s&allow_audio_only=true&allow_source=true",
 		c.usherAPIURL, id, tok, sig)
 	resp, err := c.client.Get(u)
 	if err != nil {
