@@ -51,7 +51,7 @@ type Client struct {
 
 // New returns a new twitch API client.
 func New(client *http.Client, clientID string) Client {
-	return Client{client, clientID, "https://gql.twitch.tv/gql", "http://usher.ttvnw.net"}
+	return Client{client, clientID, "https://gql.twitch.tv/gql", "https://usher.ttvnw.net"}
 }
 
 // Custom returns a new twitch API client with custom API endpoints
