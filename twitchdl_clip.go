@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const clipQualityFramerateFormat = "%sp%d"
+const clipQualityFramerateFormat = "%sp%.f"
 
 func downloadClip(ctx context.Context, client *http.Client, clientID, id, quality string) (io.ReadCloser, error) {
 	api := twitch.New(client, clientID)

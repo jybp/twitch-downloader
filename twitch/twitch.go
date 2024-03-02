@@ -141,9 +141,9 @@ type ClipVideo struct {
 		Value     string `json:"value"`
 	} `json:"playbackAccessToken"`
 	Qualities []struct {
-		FrameRate int    `json:"frameRate"`
-		Quality   string `json:"quality"`
-		SourceURL string `json:"sourceURL"`
+		FrameRate float64 `json:"frameRate"`
+		Quality   string  `json:"quality"`
+		SourceURL string  `json:"sourceURL"`
 	} `json:"videoQualities"`
 }
 
