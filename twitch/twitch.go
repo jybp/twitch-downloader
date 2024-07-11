@@ -30,7 +30,7 @@ func ID(URL string) (string, VideoType, error) {
 	if !strings.Contains(u.Hostname(), "twitch.tv") {
 		return "", 0, errors.Errorf("URL host for %s is not twitch.tv", URL)
 	}
-	if strings.HasPrefix(u.Path, "/videos/") {
+	if strings.HasPrefix(u.Path, "/videos/") || strings.Contains(u.Path, "/video/") {
 		_, id := path.Split(u.Path)
 		return id, TypeVOD, nil
 	}

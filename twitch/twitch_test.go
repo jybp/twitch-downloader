@@ -26,6 +26,11 @@ func TestID(t *testing.T) {
 			expectedType: twitch.TypeVOD,
 		},
 		{
+			input:        "https://www.twitch.tv/letsgameitout/video/2182428086",
+			expectedID:   "2182428086",
+			expectedType: twitch.TypeVOD,
+		},
+		{
 			input:        "https://www.twitch.tv/test/clip/Slug123",
 			expectedID:   "Slug123",
 			expectedType: twitch.TypeClip,
