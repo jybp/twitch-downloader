@@ -27,4 +27,4 @@ https://github.com/jybp/twitch-downloader/releases
 
 1. Install the latest version of Go https://golang.org/
 2. Clone the git repository
-3. Set the current directory to `cmd/twitchdl` and run `go build -ldflags "-X main.defaultClientID=TwitchClientID"`
+3. Run `go build -ldflags "-X main.defaultClientID=kimne78kx3ncx6brgo4mv6wki5h1ko" ./cmd/twitchdl`
