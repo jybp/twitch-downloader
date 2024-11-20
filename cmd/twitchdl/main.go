@@ -30,7 +30,7 @@ func init() {
 
 	flag.StringVar(&url, "url", "", `The URL of the twitch VOD or Clip to download.`)
 	flag.StringVar(&quality, "q", "", "Quality of the video to download. Omit this flag to print the available qualities.\nUse \"best\" to automatically select the highest quality.")
-	flag.StringVar(&output, "o", "", `Path where the video will be downloaded. (optional)`)
+	flag.StringVar(&output, "o", "", "Path where the video will be downloaded. Example: `-o my-video.ts`. (optional)")
 	flag.DurationVar(&start, "start", time.Duration(0), "Specify \"start\" to download a subset of the VOD. Example: 1h23m45s (optional)")
 	flag.DurationVar(&end, "end", time.Duration(0), "Specify \"end\" to download a subset of the VOD. Example: 1h34m56s (optional)")
 	flag.StringVar(&clientID, "client-id", "", "Use a specific twitch.tv API client ID. (optional)")
@@ -90,9 +90,9 @@ func run() error {
 
 	path, filename := filepath.Split(output)
 	if len(filename) == 0 {
-		ext := "mp4"
+		ext := "ts"
 		if strings.Contains(strings.ToLower(quality), "audio") {
-			ext = "mp4a"
+			ext = "aac"
 		}
 		filename = fmt.Sprintf("%s (%s).%s", name, quality, ext)
 	}
