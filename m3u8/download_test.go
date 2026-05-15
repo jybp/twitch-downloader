@@ -1,17 +1,16 @@
-package twitchdl
+package m3u8
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/jybp/twitch-downloader/m3u8"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSliceSegments(t *testing.T) {
-	segments := []m3u8.MediaSegment{
+	segments := []MediaSegment{
 		{Number: 0, Duration: time.Second * 5},
 		{Number: 1, Duration: time.Second * 5},
 		{Number: 2, Duration: time.Second * 5},

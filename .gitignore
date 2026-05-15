@@ -2,6 +2,10 @@ twitchdl.exe
 twitchdl
 !twitchdl/
 
+m3u8dl.exe
+m3u8dl
+!m3u8dl/
+
 releases
 
 dist
